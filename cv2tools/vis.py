@@ -10,7 +10,11 @@ def batch_image_to_array(arr):
     height = max(1,int(np.sqrt(patches)*0.9))
     width = int(patches/height+1)
 
-    img = np.zeros((height*(uh+1), width*(uw+1), 3),dtype='float32')
+    img = np.zeros((height*(uh+1), width*(uw+1), 3),dtype=arr.dtype)
+    if arr.dtype == 'uint8':
+        img[:,:,1] = 25
+    else:
+        img[:,:,1] = .1
 
     index = 0
     for row in range(height):
