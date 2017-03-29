@@ -106,7 +106,7 @@ def intersect(tl1,tl2,size1,size2):
         return False
 
 # same as above, but return roi-ed numpy array views
-def intersect_get_roi(bg,fg,offset=[0,0],verbose=True):
+def intersect_get_roi(bg,fg,offset=[0,0],verbose=False):
     bgh,bgw,bgc = bg.shape
     fgh,fgw,fgc = fg.shape
 
