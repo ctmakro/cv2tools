@@ -106,14 +106,15 @@ def intersect(tl1,tl2,size1,size2):
         return False
 
 # same as above, but return roi-ed numpy array views
-def intersect_get_roi(bg,fg,offset=[0,0]):
+def intersect_get_roi(bg,fg,offset=[0,0],verbose=True):
     bgh,bgw,bgc = bg.shape
     fgh,fgw,fgc = fg.shape
 
     # obtain roi in background coords
     isect = intersect([0,0], offset, [bgh,bgw], [fgh,fgw])
     if isect==False:
-        print('warning: two roi of shape',bg.shape,fg.shape,'has no intersection.')
+        if verbose==True:
+            print('warning: two roi of shape',bg.shape,fg.shape,'has no intersection.')
         return None
 
     tl,br,sz = isect
@@ -129,8 +130,8 @@ def intersect_get_roi(bg,fg,offset=[0,0]):
 
 # alpha composition.
 # bg shape: [HW3] fg shape: [HW4] dtype: float32
-def alpha_composite(bg,fg,offset=[0,0]):
-    isectgr = intersect_get_roi(bg,fg,offset)
+def alpha_composite(bg,fg,offset=[0,0],verbose=True):
+    isectgr = intersect_get_roi(bg,fg,offset,verbose=verbose)
     if isectgr is None:
         return bg
     else:

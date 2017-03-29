@@ -12,14 +12,14 @@ here = path.abspath(path.dirname(__file__))
 long_description='n/a'
 
 setup(
-    name='cv2vis',
+    name='cv2tools',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
     version='0.1.13',
 
-    description='fast visualization using cv2',
+    description='manipulation and visualization library based on cv2',
     long_description=long_description,
 
     # The project's main homepage.
