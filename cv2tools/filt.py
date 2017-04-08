@@ -103,18 +103,18 @@ def intersect(tl1,tl2,size1,size2):
     if x_tl<x_br and y_tl<y_br:
         return [y_tl,x_tl],[y_br,x_br], [y_br-y_tl,x_br-x_tl]
     else:
-        return False
+        return None
 
 # same as above, but return roi-ed numpy array views
-def intersect_get_roi(bg,fg,offset=[0,0],verbose=False):
+def intersect_get_roi(bg,fg,offset=[0,0],verbose=True):
     bgh,bgw,bgc = bg.shape
     fgh,fgw,fgc = fg.shape
 
     # obtain roi in background coords
     isect = intersect([0,0], offset, [bgh,bgw], [fgh,fgw])
-    if isect==False:
+    if isect is None:
         if verbose==True:
-            print('warning: two roi of shape',bg.shape,fg.shape,'has no intersection.')
+            print('(intersect_get_roi)warning: two roi of shape',bg.shape,fg.shape,'has no intersection.')
         return None
 
     tl,br,sz = isect
