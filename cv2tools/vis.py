@@ -56,3 +56,27 @@ def show_autoscaled(img,limit=400.,name=''):
 def show_batch_autoscaled(arr,limit=400.,name=''):
     img = batch_image_to_array(arr)
     show_autoscaled(img,limit,name)
+
+import matplotlib.pyplot as plt
+class plotter:
+    def __init__(self):
+        plt.ion()
+
+        self.x = []
+        self.y = []
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(1,1,1)
+
+    def pushy(self,y):
+        self.y.append(y)
+        if len(self.x)>0:
+            self.x.append(self.x[-1]+1)
+        else:
+            self.x.append(0)
+    def newpoint(self,y):
+        self.pushy(y)
+
+    def show(self):
+        self.ax.clear()
+        self.ax.plot(self.x,self.y)
+        plt.draw()
