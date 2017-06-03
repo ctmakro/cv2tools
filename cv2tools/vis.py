@@ -48,6 +48,15 @@ def autoscale(img,limit=400.):
 
     return img,imgscale
 
+def resize_linear(img,h,w):
+    return cv2.resize(img,dsize=(
+        int(w),int(h)),
+        interpolation=cv2.INTER_LINEAR)
+def resize_cubic(img,h,w):
+    return cv2.resize(img,dsize=(
+        int(w),int(h)),
+        interpolation=cv2.INTER_CUBIC)
+
 def show_autoscaled(img,limit=400.,name=''):
     im,ims = autoscale(img,limit=limit)
     cv2.imshow(name+str(img.shape)+' gened scale:'+str(ims),im)
