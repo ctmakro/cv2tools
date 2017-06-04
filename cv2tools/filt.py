@@ -142,3 +142,20 @@ def alpha_composite(bg,fg,offset=[0,0],verbose=True):
     bgroi[:] = bgroi[:] * (1 - alpha) + fgroi[:,:,0:3] * alpha
 
     return bg
+
+# pixel displacement
+def displace(img,dy,dx):
+    assert img.shape[0:2] == dy.shape[0:2]
+    assert img.shape[0:2] == dx.shape[0:2]
+
+    ih,iw = img.shape[0:2]
+    rowimg,colimg = np.mgrid[0:ih,0:iw]
+
+    rowimg += dy.astype('int32')
+    colimg += dx.astype('int32')
+
+    rowimg = np.clip(rowimg,a_max=ih-1,a_min=0)
+    colimg = np.clip(colimg,a_max=iw-1,a_min=0)
+
+    res = img[rowimg,colimg]
+    return res
