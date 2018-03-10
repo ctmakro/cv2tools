@@ -106,9 +106,9 @@ def intersect(tl1,tl2,size1,size2):
         return None
 
 # same as above, but return roi-ed numpy array views
-def intersect_get_roi(bg,fg,offset=[0,0],verbose=True):
-    bgh,bgw,bgc = bg.shape
-    fgh,fgw,fgc = fg.shape
+def intersect_get_roi(bg,fg,offset=[0,0],verbose=True, return_numbers=False):
+    bgh,bgw = bg.shape[0:2]
+    fgh,fgw = fg.shape[0:2]
 
     # obtain roi in background coords
     isect = intersect([0,0], offset, [bgh,bgw], [fgh,fgw])
@@ -120,13 +120,18 @@ def intersect_get_roi(bg,fg,offset=[0,0],verbose=True):
     tl,br,sz = isect
     # print(isect)
     bgroi = bg[tl[0]:br[0], tl[1]:br[1]]
+    bgroi_numbers = [tl[0], br[0], tl[1], br[1]]
 
     # obtain roi in fg coords
     tl,br,sz = isect = intersect([-offset[0],-offset[1]],[0,0],[bgh,bgw],[fgh,fgw])
     # print(isect)
     fgroi = fg[tl[0]:br[0], tl[1]:br[1]]
+    fgroi_numbers = [tl[0], br[0], tl[1], br[1]]
 
-    return fgroi,bgroi
+    if return_numbers:
+        return fgroi,bgroi, fgroi_numbers, bgroi_numbers
+    else:
+        return fgroi,bgroi
 
 # alpha composition.
 # bg shape: [HW3] fg shape: [HW4] dtype: float32
@@ -141,6 +146,28 @@ def alpha_composite(bg,fg,offset=[0,0],verbose=True):
     alpha = fgroi[:,:,3:3+1]
     bgroi[:] = bgroi[:] * (1 - alpha) + fgroi[:,:,0:3] * alpha
 
+    return bg
+
+# same as above but
+# takes separated alpha channel as input (size == foreground)
+# allow any number of channels as input
+def alpha_composite_separated(bg, fg, alpha, offset=[0,0], verbose=True):
+    # assert bg.shape[2] == fg.shape[2]
+    assert fg.shape[0] == alpha.shape[0]
+    assert fg.shape[1] == alpha.shape[1]
+
+    if len(alpha.shape)==2: alpha.shape+=(1,)
+
+    isectgr = intersect_get_roi(bg,fg,offset,verbose=verbose, return_numbers=True)
+    if isectgr is None:
+        return bg
+    else:
+        fgroi, bgroi, fgroi_numbers, bgroi_numbers = isectgr
+
+    fn = fgroi_numbers
+    alpha = alpha[fn[0]:fn[1], fn[2]:fn[3]]
+
+    bgroi[:] = bgroi[:] * (1-alpha) + fgroi[:] * alpha
     return bg
 
 # pixel displacement
