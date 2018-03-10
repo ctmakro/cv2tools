@@ -48,14 +48,29 @@ def autoscale(img,limit=400.):
 
     return img,imgscale
 
-def resize_linear(img,h,w):
-    return cv2.resize(img,dsize=(
-        int(w),int(h)),
-        interpolation=cv2.INTER_LINEAR)
-def resize_cubic(img,h,w):
-    return cv2.resize(img,dsize=(
-        int(w),int(h)),
-        interpolation=cv2.INTER_CUBIC)
+def resize_of_interpolation(interpolation):
+    def resize_interpolation(img, h, w):
+        return cv2.resize(img,
+            dsize=(int(w), int(h)),
+            interpolation=interpolation)
+    return resize_interpolation
+
+resize_linear = resize_of_interpolation(cv2.INTER_LINEAR)
+resize_cubic = resize_of_interpolation(cv2.INTER_CUBIC)
+resize_lanczos = resize_of_interpolation(cv2.INTER_LANCZOS4)
+
+# gaussian pyramid downsample before resize to reduce aliasing
+def resize_autosmooth(img, h, w):
+    timg = img
+    while True:
+        # check scale
+        scale = h / timg.shape[0]
+
+        if scale > 0.5: # scale them just fine
+            return resize_lanczos(timg, h, w)
+        else:
+            # gaussian downsample
+            timg = cv2.pyrDown(timg)
 
 def show_autoscaled(img,limit=400.,name=''):
     im,ims = autoscale(img,limit=limit)
