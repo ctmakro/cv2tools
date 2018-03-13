@@ -143,7 +143,7 @@ def intersect_get_roi_numbers(bgshape,fgshape,offset=[0,0],verbose=True):
     isect = intersect([0,0], offset, [bgh,bgw], [fgh,fgw])
     if isect is None:
         if verbose==True:
-            print('(intersect_get_roi)warning: two roi of shape',bg.shape,fg.shape,'has no intersection.')
+            print('(intersect_get_roi)warning: two roi of shape ({} {}) ({} {}) has no intersection.'.format(bgh,bgw,fgh,fgw))
         return None
     else:
         tl, br = isect
