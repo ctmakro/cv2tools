@@ -70,7 +70,7 @@ def resize_autosmooth(img, h, w):
         scale = h / timg.shape[0]
 
         if scale > 0.5: # scale them just fine
-            return resize_lanczos(timg, h, w)
+            return resize_linear(timg, h, w)
         else:
             # gaussian downsample
             timg = cv2.pyrDown(timg)
