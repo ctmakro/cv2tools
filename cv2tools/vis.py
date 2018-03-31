@@ -1,27 +1,41 @@
 import cv2
 import numpy as np
 
+def ceil(i):
+    ii = int(i)
+    if i == ii:
+        return ii
+    else:
+        return ii + 1
+
 # input to this function must have shape [N H W C] where C = 1 or 3.
-def batch_image_to_array(arr):
+def batch_image_to_array(arr, margin=1, color=None, aspect_ratio=1.1, width=None, height=None):
     import cv2
     num,uh,uw,depth = arr.shape
 
     patches = num
-    height = max(1,int(np.sqrt(patches)*0.9))
-    width = int(patches/height+1)
+    if height is None:
+        height = max(1,int(np.sqrt(patches)/aspect_ratio))
+    if width is None:
+        width = ceil(patches/height)
 
-    img = np.zeros((height*(uh+1), width*(uw+1), 3),dtype=arr.dtype)
-    if arr.dtype == 'uint8':
-        img[:,:,1] = 25
+    assert width*height >= patches
+
+    img = np.zeros((height*(uh+margin), width*(uw+margin), 3),dtype=arr.dtype)
+    if color is None:
+        if arr.dtype == 'uint8':
+            img[:,:,1] = 25
+        else:
+            img[:,:,1] = .1
     else:
-        img[:,:,1] = .1
+        img += color
 
     index = 0
     for row in range(height):
         for col in range(width):
             if index<num:
                 channels = arr[index]
-                img[row*(uh+1):row*(uh+1)+uh,col*(uw+1):col*(uw+1)+uw,:] = channels
+                img[row*(uh+margin):row*(uh+margin)+uh,col*(uw+margin):col*(uw+margin)+uw,:] = channels
             index+=1
     return img
 
