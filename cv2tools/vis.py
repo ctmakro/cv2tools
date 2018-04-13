@@ -75,19 +75,73 @@ def resize_of_interpolation(interpolation):
 resize_linear = resize_of_interpolation(cv2.INTER_LINEAR)
 resize_cubic = resize_of_interpolation(cv2.INTER_CUBIC)
 resize_lanczos = resize_of_interpolation(cv2.INTER_LANCZOS4)
+resize_nearest = resize_of_interpolation(cv2.INTER_NEAREST)
+resize_area = resize_of_interpolation(cv2.INTER_AREA)
 
 # gaussian pyramid downsample before resize to reduce aliasing
-def resize_autosmooth(img, h, w):
-    timg = img
-    while True:
-        # check scale
-        scale = h / timg.shape[0]
+# def resize_autosmooth(img, h, w):
+#     timg = img
+#     while True:
+#         # check scale
+#         scale = h / timg.shape[0]
+#
+#         if scale > 0.5: # scale them just fine
+#             return resize_linear(timg, h, w)
+#         else:
+#             # gaussian downsample
+#             timg = cv2.pyrDown(timg)
 
-        if scale > 0.5: # scale them just fine
-            return resize_linear(timg, h, w)
-        else:
-            # gaussian downsample
-            timg = cv2.pyrDown(timg)
+def prefilter_lanczos_kernel(hs, ws):
+    hs*=0.95 # over blur a bit
+    ws*=0.95
+
+    sx = .5/ws
+    sy = .5/hs
+
+    fw = max(2, ceil(sx*4))
+    fh = max(2, ceil(sy*4))
+
+    if fw%2==0: fw+=1
+    if fh%2==0: fh+=1
+
+    x = np.linspace(-(fw//2), fw//2, fw)
+    y = np.linspace(-(fh//2), fh//2, fh)
+
+    x *= ws
+    y *= hs
+
+    a = 2
+    lanczosx = np.where(x<a, np.sinc(x)*np.sinc(x/a), 0)
+    lanczosy = np.where(y<a, np.sinc(y)*np.sinc(y/a), 0)
+    lanczos = np.outer(lanczosy, lanczosx).astype('float32')
+
+    return lanczos / lanczos.sum()
+
+# prefilter then resize.
+def resize_perfect(img, h, w):
+
+    hs = h/img.shape[0]
+    ws = w/img.shape[1]
+
+    if hs < 1 or ws < 1:
+        lanczos = prefilter_lanczos_kernel(hs, ws)
+        img = cv2.filter2D(img, -1, lanczos)
+    else:
+        pass
+
+    return resize_linear(img, h, w)
+    
+resize_autosmooth = resize_perfect
+
+# good for downsampling.
+def resize_box(img, h, w):
+    # check scale
+    scale = h / img.shape[0]
+
+    if scale > 1:
+        return resize_linear(img, h, w)
+    else:
+        return resize_area(img, h, w)
 
 def show_autoscaled(img,limit=400.,name=''):
     im,ims = autoscale(img,limit=limit)
@@ -121,3 +175,10 @@ def show_batch_autoscaled(arr,limit=400.,name=''):
 #         self.ax.clear()
 #         self.ax.plot(self.x,self.y)
 #         plt.draw()
+
+if __name__ == '__main__':
+    lanczos = prefilter_lanczos_kernel(.1,.5)
+    print('sum', lanczos.sum())
+    print(lanczos, lanczos.shape)
+    show_autoscaled(lanczos*0.5+0.5,limit=50)
+    cv2.waitKey(0)
