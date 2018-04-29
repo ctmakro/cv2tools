@@ -1,12 +1,8 @@
 import cv2
 import numpy as np
 
-def ceil(i):
-    ii = int(i)
-    if i == ii:
-        return ii
-    else:
-        return ii + 1
+import math
+ceil = math.ceil
 
 # input to this function must have shape [N H W C] where C = 1 or 3.
 def batch_image_to_array(arr, margin=1, color=None, aspect_ratio=1.1, width=None, height=None):
@@ -78,62 +74,44 @@ resize_lanczos = resize_of_interpolation(cv2.INTER_LANCZOS4)
 resize_nearest = resize_of_interpolation(cv2.INTER_NEAREST)
 resize_area = resize_of_interpolation(cv2.INTER_AREA)
 
-# gaussian pyramid downsample before resize to reduce aliasing
-# def resize_autosmooth(img, h, w):
-#     timg = img
-#     while True:
-#         # check scale
-#         scale = h / timg.shape[0]
-#
-#         if scale > 0.5: # scale them just fine
-#             return resize_linear(timg, h, w)
-#         else:
-#             # gaussian downsample
-#             timg = cv2.pyrDown(timg)
-
-def prefilter_lanczos_kernel(hs, ws):
-    hs*=0.95 # over blur a bit
-    ws*=0.95
-
-    sx = .5/ws
-    sy = .5/hs
-
-    fw = max(2, ceil(sx*4))
-    fh = max(2, ceil(sy*4))
-
-    if fw%2==0: fw+=1
-    if fh%2==0: fh+=1
-
-    x = np.linspace(-(fw//2), fw//2, fw)
-    y = np.linspace(-(fh//2), fh//2, fh)
-
-    x *= ws
-    y *= hs
-
-    a = 2
-    lanczosx = np.where(x<a, np.sinc(x)*np.sinc(x/a), 0)
-    lanczosy = np.where(y<a, np.sinc(y)*np.sinc(y/a), 0)
-    lanczos = np.outer(lanczosy, lanczosx).astype('float32')
-
-    return lanczos / lanczos.sum()
+def lanczos_kernel(radius, a=2):
+    halfskirt = ceil(radius*a-1)
+    fullskirt = halfskirt*2 + 1
+    scaled_hs = halfskirt/radius
+    
+    y = np.linspace(-scaled_hs, scaled_hs, fullskirt)
+    
+    lanczos = np.where((-a<y) * (y<a), np.sinc(y)*np.sinc(y/a), 0)
+    return (lanczos / lanczos.sum()).astype('float32')
 
 # prefilter then resize.
-def resize_perfect(img, h, w):
+def resize_perfect(img, h, w, cubic=False, a=2):
+    assert 1<a and a<5
+    
+    hr = img.shape[0]/h
+    wr = img.shape[1]/w
 
-    hs = h/img.shape[0]
-    ws = w/img.shape[1]
+    if hr > 1 or wr > 1:
+        # lanczos = prefilter_lanczos_kernel(hs, ws)
+        lanczosy = lanczos_kernel(hr, a=a)
+        lanczosx = lanczos_kernel(wr, a=a)
 
-    if hs < 1 or ws < 1:
-        lanczos = prefilter_lanczos_kernel(hs, ws)
-        img = cv2.filter2D(img, -1, lanczos)
+        lanczosy.shape = lanczosy.shape+(1,)
+        lanczosx.shape = (1,) + lanczosx.shape
+
+        img = cv2.filter2D(img, -1, lanczosy)
+        img = cv2.filter2D(img, -1, lanczosx)
     else:
         pass
 
-    return resize_linear(img, h, w)
-    
+    if cubic:
+        return resize_cubic(img, h, w)
+    else:
+        return resize_linear(img, h, w)
+
 resize_autosmooth = resize_perfect
 
-# good for downsampling.
+# use resize_perfect() instead for downsampling.
 def resize_box(img, h, w):
     # check scale
     scale = h / img.shape[0]
