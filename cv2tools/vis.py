@@ -78,29 +78,38 @@ def lanczos_kernel(radius, a=2):
     halfskirt = ceil(radius*a-1)
     fullskirt = halfskirt*2 + 1
     scaled_hs = halfskirt/radius
-    
+
     y = np.linspace(-scaled_hs, scaled_hs, fullskirt)
-    
+
     lanczos = np.where((-a<y) * (y<a), np.sinc(y)*np.sinc(y/a), 0)
     return (lanczos / lanczos.sum()).astype('float32')
 
+def lanczos_filter(img, yradius, xradius, a=2):
+    lanczosy = lanczos_kernel(yradius, a=a)
+    lanczosx = lanczos_kernel(xradius, a=a)
+    lanczosy.shape = lanczosy.shape+(1,)
+    lanczosx.shape = (1,) + lanczosx.shape
+    img = cv2.filter2D(img, -1, lanczosy)
+    img = cv2.filter2D(img, -1, lanczosx)
+    return img
+
 # prefilter then resize.
 def resize_perfect(img, h, w, cubic=False, a=2):
-    assert 1<a and a<5
-    
+    assert 1<=a and a<5
+
     hr = img.shape[0]/h
     wr = img.shape[1]/w
 
     if hr > 1 or wr > 1:
-        # lanczos = prefilter_lanczos_kernel(hs, ws)
-        lanczosy = lanczos_kernel(hr, a=a)
-        lanczosx = lanczos_kernel(wr, a=a)
-
-        lanczosy.shape = lanczosy.shape+(1,)
-        lanczosx.shape = (1,) + lanczosx.shape
-
-        img = cv2.filter2D(img, -1, lanczosy)
-        img = cv2.filter2D(img, -1, lanczosx)
+        img = lanczos_filter(img, hr, wr, a=a)
+        # lanczosy = lanczos_kernel(hr, a=a)
+        # lanczosx = lanczos_kernel(wr, a=a)
+        #
+        # lanczosy.shape = lanczosy.shape+(1,)
+        # lanczosx.shape = (1,) + lanczosx.shape
+        #
+        # img = cv2.filter2D(img, -1, lanczosy)
+        # img = cv2.filter2D(img, -1, lanczosx)
     else:
         pass
 
