@@ -154,6 +154,17 @@ def intersect_get_roi_numbers(bgshape,fgshape,offset=[0,0],verbose=True):
 
         return bgroi_numbers, fgroi_numbers
 
+# place one image atop another, no alpha involved
+def direct_composite(bg, fg, offset=[0,0]):
+    isectgr = intersect_get_roi(bg,fg,offset,verbose=None)
+    if isectgr is None:
+        return bg
+    else:
+        fgroi,bgroi = isectgr
+
+    bgroi[:] = fgroi[:]
+    return bg
+
 # alpha composition.
 # bg shape: [HW3] fg shape: [HW4] dtype: float32
 def alpha_composite(bg,fg,offset=[0,0],verbose=True):

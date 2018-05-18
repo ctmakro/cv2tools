@@ -51,8 +51,9 @@ def autoscale(img,limit=400.):
             # img = cv2.resize(img,dsize=(
             #     int(img.shape[1]*imgscale),int(img.shape[0]*imgscale)),
             #     interpolation=cv2.INTER_LINEAR) # use bilinear
-            img = resize_autosmooth(
-                img, img.shape[0]*imgscale, img.shape[1]*imgscale
+            img = resize_perfect(
+                img, img.shape[0]*imgscale, img.shape[1]*imgscale,
+                a = 1,
             )
         else:
             img = cv2.resize(img,dsize=(
